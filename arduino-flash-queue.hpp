@@ -1,5 +1,5 @@
-#ifndef FLASHTRANSLATIONLAYER
-#define FLASHTRANSLATIONLAYER
+#ifndef FLASHQUEUE
+#define FLASHQUEUE
 
 #include <deque>
 #include <algorithm> // std::sort
@@ -23,7 +23,7 @@ template <typename HeaderMetadataType> struct FlashPageHeader
     // Custom for type of info stored in layer
     HeaderMetadataType metadata;
 
-    FlashPageHeader(int pageNumber, int count, unsigned long flashWriteId, const HeaderMetadataType& metadata) :
+    FlashPageHeader(int pageNumber, int count, int flashWriteId, const HeaderMetadataType& metadata) :
         pageNumber(pageNumber),
         count(count),
         flashWriteId(flashWriteId),
@@ -40,7 +40,7 @@ template <typename HeaderMetadataType> struct FlashPageHeader
 //   b. Only opportunistically writes back page erase to flash memory,
 //      meaning if device is shut down / reset not all deletes may go
 //      through resulting in redundant data
-template <typename HeaderMetadataType, typename DataType> class FlashTranslationLayer
+template <typename DataType, typename HeaderMetadataType = bool> class FlashQueue
 {
 public:
     const int DataPacketsPerFlashPage;
@@ -48,7 +48,7 @@ public:
     // Total available number flash pages
     const int NumFlashPages;
 
-    FlashTranslationLayer(int bytesPerFlashPage, int lowestFlashPageAvailable, int highestFlashPageAvailable) :
+    FlashQueue(int bytesPerFlashPage, int lowestFlashPageAvailable, int highestFlashPageAvailable) :
       DataPacketsPerFlashPage((bytesPerFlashPage - sizeof(FlashPageHeader<HeaderMetadataType>)) / sizeof(DataType)),
       LowestFlashPageNumber(lowestFlashPageAvailable),
       NumFlashPages(highestFlashPageAvailable - lowestFlashPageAvailable + 1),
@@ -296,4 +296,4 @@ private:
     }
 };
 
-#endif // FLASHTRANSLATIONLAYER
+#endif // FLASHQUEUE
