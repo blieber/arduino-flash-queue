@@ -58,7 +58,7 @@ flashQueue.flashWriteData(dataPackets);
 
 Reading follows a more familiar peek/pop pattern. A flash page is erased when the last packet located on the page is popped.
 ```
-while (flashQueue->flashDataAvailable())
+while (flashQueue.flashDataAvailable())
 {
     DataPacketType dataPacket = flashQueue.flashPeekDatum();
 
