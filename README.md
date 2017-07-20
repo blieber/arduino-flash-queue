@@ -60,10 +60,10 @@ Reading follows a more familiar peek/pop pattern. A flash page is erased when th
 ```
 while (flashQueue->flashDataAvailable())
 {
-	DataPacketType dataPacket = flashQueue.flashPeekDatum();
+    DataPacketType dataPacket = flashQueue.flashPeekDatum();
 
-	// Do something with dataPacket ...
+    // Do something with dataPacket ...
 
-	flashQueue.flashPopDatum();
+    flashQueue.flashPopDatum();
 }
 ```
