@@ -20,7 +20,7 @@ template <typename HeaderMetadataType> struct FlashPageHeader
     // flash is rated for 10,000 writes << 2^31
     int flashWriteId;
 
-    // Custom for type of info stored in layer
+    // (Optional) custom metadata associated with each flash page
     HeaderMetadataType metadata;
 
     FlashPageHeader(int pageNumber, int count, int flashWriteId, const HeaderMetadataType& metadata) :
