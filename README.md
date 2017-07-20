@@ -3,7 +3,7 @@ Facade with FIFO-ish interface to write to and read from flash memory on Arduino
 
 
 ### Features
-* High-level interface to write and read from flash memory instead of using manual page addressing, flashPageErase, and flashWriteBlock.
+* High-level interface to write and read from flash memory instead of using manual page addressing and Simblee flashPageErase and flashWriteBlock.
 * Template class to allow custom types to be translated to/from flash memory.
 * Order in which items are enqueued is preserved when items are dequeued (FIFO).
 * (Not documented) Optional template parameter to save custom metadata with each flash page.
