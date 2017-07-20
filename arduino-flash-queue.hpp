@@ -3,7 +3,7 @@
 
 #include <deque>
 #include <algorithm> // std::sort
-#include <ArduinoLog.h>
+#include <ArduinoLog.h> // Convenient logging library that wraps Arduino Serial
 
 
 template <typename HeaderMetadataType> struct FlashPageHeader
@@ -40,7 +40,7 @@ template <typename HeaderMetadataType> struct FlashPageHeader
 //   b. Only opportunistically writes back page erase to flash memory,
 //      meaning if device is shut down / reset not all deletes may go
 //      through resulting in redundant data
-template <typename DataType, typename HeaderMetadataType = bool> class FlashQueue
+template <typename DataType, typename HeaderMetadataType = int> class FlashQueue
 {
 public:
     const int DataPacketsPerFlashPage;
@@ -86,7 +86,7 @@ public:
 
     // Write data packets to new flash page
     // Note: expects and writes DataPacketsPerFlashPage
-    bool flashWriteData(const HeaderMetadataType& metadata, const DataType* data)
+    bool flashWriteData(const DataType* data, const HeaderMetadataType& metadata = 0)
     {
         if (emptyFlashPages.empty())
         {
@@ -132,7 +132,7 @@ public:
 
     // Peek at next available data packet
     // Undefined behavior if no data avaialble
-    DataType flashPeekData() const
+    DataType flashPeekDatum() const
     {
         int page = dataFlashPages.front().pageNumber;
         DataType* data = getDataOnPage(page);
@@ -140,7 +140,7 @@ public:
     }
 
     // "Pop" data packet and seek to next data packet
-    bool flashPopData()
+    bool flashPopDatum()
     {
         if (dataFlashPages.empty())
         {
@@ -172,6 +172,7 @@ public:
             // error erasing flash page - cannot proceed!
             else
             {
+              Log.error("Error erasing flash page.\n");
               readDataPeekIndex--; // restore old index
               return false;
             }
@@ -220,8 +221,8 @@ private:
         return reinterpret_cast<DataType*>(((void *)ADDRESS_OF_PAGE(page)) + sizeof(FlashPageHeader<HeaderMetadataType>));
     }
 
-    // Apparently this needs to be followed with a flash page write - otherwise controller restarts
-    // Believe should still be 4 bytes aligned due to underlying impl of flashWriteBlock
+    // Needs to be followed with a flash page write - otherwise controller restarts
+    // Should still be 4 bytes aligned due to underlying impl of flashWriteBlock
     static int eraseFlashPage(int page)
     {
         Log.verbose("Attempting to erase flash page %d\n", page);
@@ -243,7 +244,7 @@ private:
         return rc;
     }
 
-    // Believe should still be 4 bytes aligned due to underlying impl of flashWriteBlock
+    // Should still be 4 bytes aligned due to underlying impl of flashWriteBlock
     static int eraseThenWriteFlashPage(int page, const void* header, int numBytesHeader, const void* data, int numBytesData)
     {
         // Argument check
