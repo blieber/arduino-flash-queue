@@ -1,7 +1,5 @@
-// Copyright (c) 2017 Quantac
-
-#include <ArduinoUnit.h>
-#include <ArduinoLog.h>
+#include <ArduinoUnit.h>  // Convenient library for running unit tests on an Arduino board
+#include <ArduinoLog.h>  // Convenient logging library that wraps Arduino Serial
 #include <arduino-flash-queue.hpp>
 
 const int BytesPerFlashPage = 1024;
@@ -27,19 +25,19 @@ test(noDataFlashRead)
 test(fullPageWriteRead) 
 {
   assertFalse(flashQueue.flashPopDatum());
-  
-  DataPacket dataPackets[flashQueue.numDataPacketsPerFlashPage()];
-  for (int i = 0; i < flashQueue.numDataPacketsPerFlashPage(); i++)
+
+  int dataPackets[flashQueue.DataPacketsPerFlashPage];
+  for (int i = 0; i < flashQueue.DataPacketsPerFlashPage; i++)
   {
     dataPackets[i] = i;
   }
 
   assertTrue(flashQueue.flashWriteData(dataPackets));
 
-  for (int i = 0; i < flashQueue.numDataPacketsPerFlashPage(); i++)
+  for (int i = 0; i < flashQueue.DataPacketsPerFlashPage; i++)
   {
     // Arduino Unit only supports simple type assertions - this is sufficient
-    assertEqual(dataPackets[i].Payload.BatteryUpdate.SecondsSincePowerOn, flashQueue.flashPeekDatum().Payload.BatteryUpdate.SecondsSincePowerOn);
+    assertEqual(dataPackets[i], flashQueue.flashPeekDatum());
     assertTrue(flashQueue.flashPopDatum());
   }
 
@@ -50,52 +48,49 @@ test(fullFlashMemoryWriteRead)
 {
   assertFalse(flashQueue.flashPopDatum());
 
-  DataPacket dataPackets[flashQueue.numDataPacketsPerFlashPage()];
-  
-  for (int n = 0; n < flashQueue.numDataPacketFlashPages(); n++)
+  int dataPackets[flashQueue.DataPacketsPerFlashPage];
+
+  for (int n = 0; n < flashQueue.NumFlashPages; n++)
   {
-    for (int i = 0; i < flashQueue.numDataPacketsPerFlashPage(); i++)
-    {
-      
-      dataPackets[i] = DataPacket(BatteryUpdateDatum { .SecondsSince1970Int = 0, .SecondsSincePowerOn = i + n * flashQueue.numDataPacketsPerFlashPage(), .BatteryVoltage = 0, ._unused0 = 0 });
+    for (int i = 0; i < flashQueue.DataPacketsPerFlashPage; i++)
+    { 
+      dataPackets[i] = n * flashQueue.DataPacketsPerFlashPage + i;
     }
-  
+
     assertTrue(flashQueue.flashWriteData(dataPackets));
   }
 
   // Now should fail given there are no flash pages left to write
   assertFalse(flashQueue.flashWriteData(dataPackets));
 
-  for (int n = 0; n < flashQueue.numDataPacketFlashPages(); n++)
+  for (int n = 0; n < flashQueue.NumFlashPages; n++)
   {
-    for (int i = 0; i < flashQueue.numDataPacketsPerFlashPage(); i++)
+    for (int i = 0; i < flashQueue.DataPacketsPerFlashPage; i++)
     {
-      assertEqual(i + n * flashQueue.numDataPacketsPerFlashPage(), flashQueue.flashPeekData().Payload.BatteryUpdate.SecondsSincePowerOn);
+      assertEqual(i + n * flashQueue.DataPacketsPerFlashPage, flashQueue.flashPeekDatum());
       assertTrue(flashQueue.flashPopDatum());
     }
   }
-  
+
   assertFalse(flashQueue.flashPopDatum());
 }
 
 void setup() {
   // enable logging to see output of text
-  #ifndef DISABLE_LOGGING   
+  #ifndef DISABLE_LOGGING
     // Initialize with log level and log output.
     Serial.begin(9600); 
     Log.begin(LOG_LEVEL_VERBOSE, &Serial);
   #endif
 
-  flashQueue = V2flashQueue::getInstance();
-
   // sanity check
-  assertTrue(flashQueue.numDataPacketFlashPages() > 0);
-  assertTrue(flashQueue.numDataPacketsPerFlashPage() > 0);
+  assertTrue(flashQueue.NumFlashPages > 0);
+  assertTrue(flashQueue.DataPacketsPerFlashPage > 0);
 
   // Clear any flash memory in case leftover from crashed / previous execution
-  for (int n = 0; n < flashQueue.numDataPacketFlashPages(); n++)
+  for (int n = 0; n < flashQueue.NumFlashPages; n++)
   {
-    for (int i = 0; i < flashQueue.numDataPacketsPerFlashPage(); i++)
+    for (int i = 0; i < flashQueue.DataPacketsPerFlashPage; i++)
     {
       if (!flashQueue.flashPopDatum())
       {
